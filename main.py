@@ -39,3 +39,33 @@ def handle_message(event):
         event.reply_token,
         TextSendMessage(text=reply_text)
     )
+#仮想環境に入ってね：Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
+# .\venv\Scripts\activate
+# uvicorn main:app --reload
+# uvicorn main:app --host   
+#pip install fastapi uvicorn python-dotenv requests
+# pip install line-bot-sdk
+@app.post("/callback")
+async def callback(request: Request, x_line_signature: str = Header(None)):
+    body = await request.body()
+    body_str = body.decode("utf-8")
+
+    try:
+        handler.handle(body_str, x_line_signature)
+    except InvalidSignatureError:
+        raise HTTPException(status_code=400, detail="Invalid signature")
+
+    return "OK"
+
+@handler.add(MessageEvent, message=TextMessage)
+def handle_message(event):
+    msg = event.message.text
+    if msg == "おはよう":
+        reply = "おはよう！"
+    else:
+        reply = "「おはよう」と言ってみてね！"
+    line_bot_api.reply_message(
+        event.reply_token,
+        TextSendMessage(text=reply)
+    )
+    
