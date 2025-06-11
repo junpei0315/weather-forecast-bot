@@ -4,6 +4,7 @@ from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
 from dotenv import load_dotenv
 import os
+import requests
 
 # .env ファイルの読み込み
 load_dotenv()
@@ -12,9 +13,20 @@ load_dotenv()
 LINE_CHANNEL_SECRET = os.getenv("CHANNEL_SECRET")
 LINE_CHANNEL_ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
 
+weather_api_url="https://map.yahooapis.jp/weather/V1/place"
+CLIENT_ID= os.getenv("CLIENT_ID")
+
+payload = {"appid":"client_ID",
+           "coordinates": "34.8163,135.5685"}
+
+r = requests.get(weather_api_url,params=payload)
+print(r.text)
+
+
 # LINE SDK のセットアップ
 line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(LINE_CHANNEL_SECRET)
+
 
 app = FastAPI()
 
