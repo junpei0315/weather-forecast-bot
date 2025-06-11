@@ -16,8 +16,8 @@ LINE_CHANNEL_ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
 weather_api_url="https://map.yahooapis.jp/weather/V1/place"
 CLIENT_ID= os.getenv("CLIENT_ID")
 
-payload = {"appid":"client_ID",
-           "coordinates": "34.8163,135.5685"}
+payload = {"appid": CLIENT_ID,
+           "coordinates": "135.5685,34.8163"}
 
 r = requests.get(weather_api_url,params=payload)
 print(r.text)
@@ -29,6 +29,11 @@ handler = WebhookHandler(LINE_CHANNEL_SECRET)
 
 
 app = FastAPI()
+
+@app.get("/weather")
+def getWeather():
+    r = requests.get(weather_api_url,params=payload)
+    return r.text
 
 @app.post("/webhook")
 async def callback(request: Request):
