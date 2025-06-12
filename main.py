@@ -16,8 +16,10 @@ LINE_CHANNEL_ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
 weather_api_url="https://map.yahooapis.jp/weather/V1/place"
 CLIENT_ID= os.getenv("CLIENT_ID")
 
-payload = {"appid": CLIENT_ID,
-           "coordinates": "135.5685,34.8163"}
+payload = {
+            "appid": CLIENT_ID,
+           "coordinates": "135.5685,34.8163"
+           }
 
 r = requests.get(weather_api_url,params=payload)
 print(r.text)
