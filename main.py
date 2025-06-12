@@ -6,6 +6,37 @@ from dotenv import load_dotenv
 import os
 import requests
 
+
+
+from datetime import datetime
+import xml.etree.ElementTree as ET
+
+def parse_weather(xml_string: str) -> str:
+    ns = {'ydf': 'http://olp.yahooapis.jp/ydf/1.0'}
+    root = ET.fromstring(xml_string)
+    location_name = root.find('.//ydf:Name', ns).text
+    weathers = root.find('.//ydf:WeatherList', ns)
+
+    seen_hours = set()
+    output = [f"🗾 地点情報: {location_name}\n"]
+
+    for weather in weathers.findall('ydf:Weather', ns):
+        weather_type_en = weather.find('ydf:Type', ns).text
+        date_str = weather.find('ydf:Date', ns).text
+        dt = datetime.strptime(date_str, "%Y%m%d%H%M")
+        hour_key = dt.strftime("%Y%m%d%H")
+        if hour_key in seen_hours:
+            continue
+        seen_hours.add(hour_key)
+
+        weather_type_jp = "観測値" if weather_type_en == "observation" else "予報値"
+        date_jp = dt.strftime("%Y年%m月%d日 %H時%M分")
+        rainfall = weather.find('ydf:Rainfall', ns).text
+
+        output.append(f"📅 {date_jp} 時点（{weather_type_jp}）: 降水量 {rainfall} mm")
+
+    return "\n".join(output)
+
 # .env ファイルの読み込み
 load_dotenv()
 
@@ -79,12 +110,17 @@ async def callback(request: Request, x_line_signature: str = Header(None)):
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     msg = event.message.text
-    if msg == "おはよう":
+
+    if msg == "天気":
+        r = requests.get(weather_api_url, params=payload)
+        xml_string = r.text
+        reply = parse_weather(xml_string)
+    elif msg == "おはよう":
         reply = "おはよう！"
     else:
-        reply = "「おはよう」と言ってみてね！"
+        reply = "「おはよう」か「天気」と言ってみてね！"
+
     line_bot_api.reply_message(
         event.reply_token,
         TextSendMessage(text=reply)
     )
-    
