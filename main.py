@@ -11,7 +11,7 @@ import requests
 from datetime import datetime
 import xml.etree.ElementTree as ET
 
-def parse_weather(xml_string: str) -> str:
+def parse_weather(xml_string: str, max_entries: int =10) -> str:
     ns = {'ydf': 'http://olp.yahooapis.jp/ydf/1.0'}
     root = ET.fromstring(xml_string)
     location_name = root.find('.//ydf:Name', ns).text
@@ -19,8 +19,11 @@ def parse_weather(xml_string: str) -> str:
 
     seen_hours = set()
     output = [f"🗾 地点情報: {location_name}\n"]
+    count = 0
 
     for weather in weathers.findall('ydf:Weather', ns):
+        if count >=max_entries:
+            break
         weather_type_en = weather.find('ydf:Type', ns).text
         date_str = weather.find('ydf:Date', ns).text
         dt = datetime.strptime(date_str, "%Y%m%d%H%M")
@@ -34,6 +37,9 @@ def parse_weather(xml_string: str) -> str:
         rainfall = weather.find('ydf:Rainfall', ns).text
 
         output.append(f"📅 {date_jp} 時点（{weather_type_jp}）: 降水量 {rainfall} mm")
+        count += 1
+        if count ==0:
+            output.append("データが取得できませんでした。")
 
     return "\n".join(output)
 
@@ -114,7 +120,7 @@ def handle_message(event):
     if msg == "天気":
         r = requests.get(weather_api_url, params=payload)
         xml_string = r.text
-        reply = parse_weather(xml_string)
+        reply = parse_weather(r.text, max_entries=10)
     elif msg == "おはよう":
         reply = "おはよう！"
     else:
